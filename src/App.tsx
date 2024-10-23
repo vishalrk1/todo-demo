@@ -1,15 +1,21 @@
 import { Check, Search, X } from "lucide-react";
 import Filters from "./components/Filters";
-import { useState } from "react";
-import { Task } from "./lib/Types";
+import { useContext } from "react";
+import { TaskContext, TaskContextType } from "./context/TaskContext";
 
 function App() {
-  const [tasks, setTasks] = useState<Task[]>([
-    { id: "1", title: "Brush teeth", completed: true, createdAt: Date.now() },
-    { id: "2", title: "Buy grocery", completed: true, createdAt: Date.now() },
-    { id: "3", title: "Pay rent", completed: false, createdAt: Date.now() },
-    { id: "4", title: "Clean room", completed: false, createdAt: Date.now() },
-  ]);
+  const taskContext = useContext<TaskContextType | undefined>(TaskContext);
+  if (!taskContext) {
+    return null;
+  }
+
+  const { tasks } = taskContext;
+  // const [tasks, setTasks] = useState<Task[]>([
+  //   { id: "1", title: "Brush teeth", completed: true, createdAt: Date.now() },
+  //   { id: "2", title: "Buy grocery", completed: true, createdAt: Date.now() },
+  //   { id: "3", title: "Pay rent", completed: false, createdAt: Date.now() },
+  //   { id: "4", title: "Clean room", completed: false, createdAt: Date.now() },
+  // ]);
 
   return (
     <main className="min-h-screen max-w-6xl p-6 mx-auto">
@@ -86,14 +92,14 @@ function App() {
         </section>
       </section>
       <section aria-label="Add new task">
-        <form onSubmit={()=>{}} className="space-y-2">
+        <form onSubmit={() => {}} className="space-y-2">
           <div className="mb-4">
-            <label htmlFor="new-task" className="sr-only">New task</label>
+            <label htmlFor="new-task" className="sr-only">
+              New task
+            </label>
             <input
               id="new-task"
               type="text"
-              // value={()=>{}}
-              // onChange={(e) => setNewTask(e.target.value)}
               placeholder="Type something"
               className="w-full p-4 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-200"
             />
