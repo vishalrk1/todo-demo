@@ -1,10 +1,10 @@
-import { Check, Search, X } from "lucide-react";
 import Filters from "./components/Filters";
-import { useContext } from "react";
-import { TaskContext, TaskContextType } from "./context/TaskContext";
 import AddTaskForm from "./components/AddTaskForm";
 import Searchbar from "./components/Searchbar";
 import TaskCard from "./components/TaskCard";
+
+import { useContext } from "react";
+import { TaskContext, TaskContextType } from "./context/TaskContext";
 
 function App() {
   const taskContext = useContext<TaskContextType | undefined>(TaskContext);

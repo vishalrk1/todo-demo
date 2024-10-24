@@ -4,30 +4,13 @@ import {
   useState,
   useCallback,
   useMemo,
+  useRef,
 } from "react";
 import debounce from "lodash.debounce";
-import { FilterType, Task } from "../lib/Types";
+import { DeletedTaskState, FilterType, Task } from "../lib/Types";
+import toast from "react-hot-toast";
+import { loadFromLocalStorage, saveToLocalStorage } from "../lib/utils";
 import { SucessToast } from "../components/SucessToast";
-
-const STORAGE_KEY = "todo";
-
-const saveToLocalStorage = (tasks: Task[]) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-  } catch (error) {
-    console.error("Error saving tasks to local storage:", error);
-  }
-};
-
-const loadFromLocalStorage = (): Task[] => {
-  try {
-    const savedTasks = localStorage.getItem(STORAGE_KEY);
-    return savedTasks ? JSON.parse(savedTasks) : [];
-  } catch (error) {
-    console.error("Error loading tasks from local storage:", error);
-  }
-  return [];
-};
 
 export interface TaskContextType {
   tasks: Task[];
@@ -55,6 +38,8 @@ export const TaskContextProvider = ({
   const [filter, setFilter] = useState<FilterType>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const lastDeletedTaskRef = useRef<DeletedTaskState | null>(null);
+
   useEffect(() => {
     saveToLocalStorage(tasks);
   }, [tasks]);
@@ -67,13 +52,64 @@ export const TaskContextProvider = ({
       createdAt: Date.now(),
     };
     setTasks((prev) => [...prev, newTask]);
-    SucessToast("Task Added Successfully", true);
+    SucessToast("Task Added Successfully");
+  }, []);
+
+  const handleUndo = useCallback((deletedTask: DeletedTaskState) => {
+    setTasks((prevTasks) => {
+      const newTasks = [...prevTasks];
+      newTasks.splice(deletedTask.index, 0, deletedTask.task);
+      return newTasks;
+    });
+    SucessToast("Task Restored Successfully");
   }, []);
 
   const removeTask = useCallback((id: string) => {
-    setTasks((prev) => prev.filter((task) => task.id !== id));
-    SucessToast("Task Removed Successfully", true);
+    setTasks((prevTasks) => {
+      const taskIndex = prevTasks.findIndex((task) => task.id === id);
+      const deletedTask = prevTasks[taskIndex];
+
+      // Store deleted task info in ref
+      lastDeletedTaskRef.current = {
+        task: deletedTask,
+        index: taskIndex,
+      };
+
+      return prevTasks.filter((task) => task.id !== id);
+    });
   }, []);
+
+  // Handle toast showing after state update
+  useEffect(() => {
+    if (lastDeletedTaskRef.current) {
+      const deletedTaskState = lastDeletedTaskRef.current;
+
+      toast(
+        (t) => (
+          <div className="flex items-center gap-2">
+            <span>Task Removed</span>
+            <button
+              onClick={() => {
+                handleUndo(deletedTaskState);
+                toast.dismiss(t.id);
+              }}
+              className="px-2 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Undo
+            </button>
+          </div>
+        ),
+        {
+          duration: 5000,
+          style: {
+            background: "#333",
+            color: "#fff",
+          },
+        }
+      );
+      lastDeletedTaskRef.current = null;
+    }
+  }, [tasks, handleUndo]);
 
   const toggleTask = useCallback((id: string) => {
     setTasks((prev) =>
@@ -81,7 +117,7 @@ export const TaskContextProvider = ({
         task.id === id ? { ...task, completed: !task.completed } : task
       )
     );
-    SucessToast("Task Updated Successfully", true);
+    toast.success("Task Updated Successfully");
   }, []);
 
   const setFilterCallback = useCallback((newFilter: FilterType) => {
@@ -92,7 +128,6 @@ export const TaskContextProvider = ({
     setSearchQuery(query);
   }, []);
 
-  // Memoize the filtering function
   const performFiltering = useCallback(() => {
     let result = [...tasks];
 
@@ -114,7 +149,6 @@ export const TaskContextProvider = ({
     setFilteredTasks(result);
   }, [tasks, filter, searchQuery]);
 
-  // Memoize the debounced filtering function
   const debouncedFiltering = useMemo(
     () =>
       debounce(() => {
@@ -133,7 +167,6 @@ export const TaskContextProvider = ({
     debouncedFiltering();
   }, [tasks, filter, searchQuery, debouncedFiltering]);
 
-  // Memoize the context value
   const contextValue = useMemo(
     () => ({
       tasks,

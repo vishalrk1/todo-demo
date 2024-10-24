@@ -44,7 +44,7 @@ const TaskCard: React.FC<Props> = ({ task }) => {
       <div className="flex-1 min-w-0">
         <p
           className={`transition-all duration-200 break-words pr-2 ${
-            task.completed ? "line-through text-gray-500" : "text-gray-900"
+            task.completed ? "text-gray-500" : "text-gray-900"
           }`}
         >
           {task.title}

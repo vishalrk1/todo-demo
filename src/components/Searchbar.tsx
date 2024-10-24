@@ -1,5 +1,5 @@
 import { Search } from "lucide-react";
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { TaskContext, TaskContextType } from "../context/TaskContext";
 
 const Searchbar = () => {

@@ -6,3 +6,8 @@ export interface Task {
 }
 
 export type FilterType = "all" | "active" | "completed";
+
+export interface DeletedTaskState {
+  task: Task;
+  index: number;
+}
