@@ -117,7 +117,7 @@ export const TaskContextProvider = ({
         task.id === id ? { ...task, completed: !task.completed } : task
       )
     );
-    toast.success("Task Updated Successfully");
+    SucessToast("Task Updated Successfully");
   }, []);
 
   const setFilterCallback = useCallback((newFilter: FilterType) => {
